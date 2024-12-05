@@ -1,7 +1,11 @@
-# GridStrategy 目前测试阶段 著需要查看test.ipynb就行
+# GridStrategy 目前测试阶段 
+
+只需要查看test.ipynb就行
 
 
-# 目录:
+
+### 目录:
+```
 .
 ├── README.md
 ├── a.txt
@@ -15,9 +19,6 @@
 ├── test.ipynb                测试文件.
 ├── test.txt                  测试输出
 └── visualization.py          可视化代码
+```
 
-# 
 
-"""
-
-"""
