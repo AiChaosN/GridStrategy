@@ -15,6 +15,9 @@ class GridCalculator:
         self.strategy = [] # 交易策略 0 买入 1 卖出
         self.Number_stocks = [] # 每个网格的股票数量
 
+        self.stocks_nums = [] # 当前交易股票数量
+        self.total_investment = [] # 总资产
+
     def generate_grid(self):
         # 生成网格
         if self.config["mode"] == 'arithmetic':
@@ -73,7 +76,13 @@ class GridCalculator:
                 self.strategy[index] = 0
                 print("价格超过网格，之后可买入")
 
-        self.investments.append(self.config['investment'])   
+        # 记录每次交易后的现金资产
+        self.investments.append(self.config['investment'])
+        # 记录每次交易后的股票数量
+        self.stocks_nums.append(sum(self.Number_stocks))
+        # 记录每次交易后的总资产
+        self.total_investment.append(self.config['investment'] + price * sum(self.Number_stocks))
+
 
     def conclusion(self):
         print("结束交易")
@@ -90,11 +99,12 @@ class GridCalculator:
         axs[0].legend()
         axs[0].grid()
 
-        # 第二个图：投资次数现金变化
-        axs[1].plot(self.investments, label="Investments", color="green", marker="o")
+        # 第二个图：投资次数现金变化 和 总资产变化
+        axs[1].plot(self.investments, label="Investment", color="red", marker="o")
+        axs[1].plot(self.total_investment, label="Total Investment", color="green", marker="o")
         axs[1].set_xlabel("Timestamp")
-        axs[1].set_ylabel("Investments")
-        axs[1].set_title("Investments Over Time")
+        axs[1].set_ylabel("Investment")
+        axs[1].set_title("Investment and Total Investment")
         axs[1].legend()
         axs[1].grid()
 
