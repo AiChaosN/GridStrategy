@@ -52,7 +52,7 @@ class GridCalculator:
                 continue
             print("之前价格", self.prices[i-1], "当前价格", self.prices[i], "跨越区间价格:", grid_indices)
             for index in grid_indices:
-                self.transaction(index)
+                self.transaction(index, self.prices[i])
          
     def transaction(self, index, price):
         if self.strategy[index] == 0:
