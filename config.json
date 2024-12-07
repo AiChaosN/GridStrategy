@@ -13,7 +13,8 @@
         "num_grids": 50,
         "leverage": 1,
         "investment": 500000, 
-        "mode": "geometric"
+        "mode": "geometric",
+        "_comment": "geometric 等比数列, arithmetic 等差数列"
     }
 }
 
