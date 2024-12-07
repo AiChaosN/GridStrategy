@@ -1,0 +1,20 @@
+{
+    "market_config": {
+        "symbol": "BTCUSDT",
+        "productType": "usdt-futures",
+        "granularity": "1D",
+        "startTime": null,
+        "endTime": null,
+        "kLineType": null,
+        "limit": 100
+        
+    },
+    "gtid_config": {
+        "lower_bound": 2200,
+        "upper_bound": 2650,
+        "num_grids": 60,
+        "leverage": 1,
+        "investment": 3000,
+        "mode": "geometric"
+    }
+}

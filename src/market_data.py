@@ -1,6 +1,8 @@
 import requests
-import datetime
 
+
+# 需要修改整体构造, 传入参数: url, parmars, 传出参数: return_data
+# TODO
 class MarketData:
     def __init__(self, config):
         self.config = config
