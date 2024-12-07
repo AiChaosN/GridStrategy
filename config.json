@@ -1,19 +1,19 @@
 {
     "market_config": {
-        "symbol": "BTCUSDT",
-        "productType": "usdt-futures",
-        "granularity": "1D",
-        "startTime": null,
-        "endTime": null,
-        "kLineType": null,
-        "limit": 100
+        "url": "https://api.livecoinwatch.com/coins/single/history",
+        "api_key": "b37339f2-daf3-41b7-9d17-e7e1f469f293",
+        "currency": "USD",
+        "code": "BTC",
+        "start": 1724155810000,
+        "end": 1729426210000
     },
     "grid_config": {
         "lower_bound": 2200,
         "upper_bound": 2650,
         "num_grids": 60,
         "leverage": 1,
-        "investment": 3000,
+        "investment": 3000, 
         "mode": "geometric"
     }
 }
+
