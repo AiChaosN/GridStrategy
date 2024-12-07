@@ -47,34 +47,39 @@ class GridCalculator:
         self.config["investment"] -= self.begin_price * nums
         print("初始买入", "股票数量", nums, "现金资产", self.config["investment"])
 
-    def run(self):
+    def run(self, print_info=False):
         for i in range(1, len(self.prices)):
             # 当前价格 和 之前价格之间的所有网格
             grid_indices = [index for index, grid_price in enumerate(self.grid) if (self.prices[i-1] <= grid_price <= self.prices[i]) or (self.prices[i] <= grid_price <= self.prices[i-1])]
             if(len(grid_indices) == 0):
                 continue
-            print("之前价格", self.prices[i-1], "当前价格", self.prices[i], "跨越区间价格:", grid_indices)
+            if print_info:
+                print("之前价格", self.prices[i-1], "当前价格", self.prices[i], "跨越区间价格:", grid_indices)
             for index in grid_indices:
-                self.transaction(index, self.prices[i])
+                self.transaction(index, self.prices[i], print_info)
          
-    def transaction(self, index, price):
+    def transaction(self, index, price, print_info=False):
         if self.strategy[index] == 0:
             if self.strategy[index] == 1: return
             # 买入
             self.config['investment'] -= self.grid[index]
             self.Number_stocks[index] += 1
-            print(f"买入价格: {self.grid[index]}, 股票数量: {self.Number_stocks[index]}, 现金资产: {self.config['investment']}")
+            if print_info:
+                print(f"买入价格: {self.grid[index]}, 股票数量: {self.Number_stocks[index]}, 现金资产: {self.config['investment']}")
             if price < self.grid[index]:
                 self.strategy[index] = 1
-                print("价格低于网格，之后可卖出")
+                if print_info:
+                    print("价格低于网格，之后可卖出")
         else:
             # 卖出
             self.config['investment'] += self.grid[index] * self.Number_stocks[index]
             self.Number_stocks[index] = 0
-            print(f"卖出价格: {self.grid[index]}, 股票数量: {self.Number_stocks[index]}, 现金资产: {self.config['investment']}")
+            if print_info:
+                print(f"卖出价格: {self.grid[index]}, 股票数量: {self.Number_stocks[index]}, 现金资产: {self.config['investment']}")
             if price > self.grid[index]:
                 self.strategy[index] = 0
-                print("价格超过网格，之后可买入")
+                if print_info:
+                    print("价格超过网格，之后可买入")
 
         # 记录每次交易后的现金资产
         self.investments.append(self.config['investment'])

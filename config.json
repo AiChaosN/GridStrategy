@@ -8,11 +8,11 @@
         "end": 1729426210000
     },
     "grid_config": {
-        "lower_bound": 2200,
-        "upper_bound": 2650,
-        "num_grids": 60,
+        "lower_bound": 53000,
+        "upper_bound": 67000,
+        "num_grids": 50,
         "leverage": 1,
-        "investment": 3000, 
+        "investment": 500000, 
         "mode": "geometric"
     }
 }
