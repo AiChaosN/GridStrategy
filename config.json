@@ -1,7 +1,7 @@
 {
     "market_config": {
         "url": "https://api.livecoinwatch.com/coins/single/history",
-        "api_key": "b37339f2-daf3-41b7-9d17-e7e1f469f293",
+        "api_key": "your_api_key",
         "currency": "USD",
         "code": "BTC",
         "start": 1724155810000,

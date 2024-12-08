@@ -55,12 +55,13 @@ class MarketData:
         return self.data
 
 # 示例配置和调用
+import os
 if __name__ == "__main__":
     
     # Example usage
     config = {
         "url": "https://api.livecoinwatch.com/coins/single/history",
-        "api_key": "b37339f2-daf3-41b7-9d17-e7e1f469f293",
+        "api_key": os.getenv("LIVECOINWATCH_API_KEY"),
         "currency": "USD",
         "code": "BTC",
         "start": 1617035100000,
