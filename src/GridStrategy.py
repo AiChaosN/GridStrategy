@@ -3,11 +3,11 @@ import random
 from .calculator import Calculator
 
 class GridStrategy:
-    def __init__(self, config, prices):
+    def __init__(self, config, stock_info):
         """
         初始化网格策略参数
         :param config: 网格策略的配置参数
-        :param prices: 价格数据
+        :param stock_info: 股票信息，包括价格和时间
         """
         self.upper_bound = config["upper_bound"]
         self.lower_bound = config["lower_bound"]
@@ -15,7 +15,12 @@ class GridStrategy:
         self.mode = config["mode"]
         self.investment = config["investment"]
         self.leverage = config["leverage"]
-        self.prices = prices
+        self.fee = config["fee"]
+
+        # 股票信息
+        self.times = stock_info[0]
+        self.prices = stock_info[1]
+        
 
         # 二级信息
         self.grid_prices = self._generate_grid()   # 网格价格
@@ -23,8 +28,8 @@ class GridStrategy:
         self.grid_stock_amount = (self.investment * self.leverage) / (self.grid_median_price * self.num_grids)   # 每网格购买的股票量
         print("每网格购买的股票量:", self.grid_stock_amount)
         self.grid_stocks = [self.grid_stock_amount for _ in range(len(self.grid_prices))]    # 各网格持仓股票数量
-        self.strategy = [0 if price <= prices[0] else 1 for price in self.grid_prices] # 各网格 0: 买入 1: 卖出
-        self.hold_stocks = sum(i*j for i, j in zip(self.strategy, self.grid_stocks))  # 持有股票数量
+        self.strategy = [0 if price <= self.prices[0] else 1 for price in self.grid_prices] # 各网格 0: 买入 1: 卖出
+        self.hold_stocks = sum(i * j for i, j in zip(self.strategy, self.grid_stocks))  # 持有股票数量
 
         self.cash_balance = self.investment 
         self.total_assets = []
@@ -32,6 +37,10 @@ class GridStrategy:
         # 指标
         self.average_hold_price = 0
         self.break_line = 0
+
+        self.arbitrage_count = 0  # 新增：用于记录套利次数
+        # 新增：用于记录每次交易细节
+        self.detial = [["委托时间", "成交时间", "交易方向", "成交价格", "成交金额", "成交额(股票数)", "手续费", "现金余额", "持仓股票数量"]]
 
         # 计算指标
         self._begin()
@@ -61,33 +70,46 @@ class GridStrategy:
             raise ValueError("Invalid mode. Choose 'arithmetic' or 'geometric'.")
         return grid_prices
 
-    def execute_trade(self, index, current_price):
+    def execute_trade(self, index, current_price, time_index):
         """
         执行网格交易，包含买入和卖出逻辑。
         :param index: 当前网格的索引
         :param current_price: 当前价格
+        :param time_index: 当前时间的索引
         """
         grid_price = self.grid_prices[index]
+        delegate_time = self.times[time_index - 1]  # 网格挂单时间
+        transaction_time = self.times[time_index]  # 网格触发时间
 
         # 买入逻辑
         if self.strategy[index] == 0:
             cost = grid_price * self.grid_stock_amount
-            if self.cash_balance >= cost:
-                self.cash_balance -= cost
+            fee = cost * self.fee
+            total_cost = cost + fee
+            if self.cash_balance >= total_cost:
+                self.cash_balance -= total_cost
                 self.grid_stocks[index] += self.grid_stock_amount
                 self.strategy[index] = 1  # 更新为可卖出状态
+                self.detial.append([
+                    delegate_time, transaction_time, "买入",
+                    grid_price, cost, self.grid_stock_amount, fee, self.cash_balance, sum(self.grid_stocks)
+                ])
                 self._log_transaction("buy", index, grid_price, cost, current_price)
-            else:
-                print(f"Insufficient balance to buy at grid {index}. Cash: {self.cash_balance}, Cost: {cost}")
-        
+                    
         # 卖出逻辑
         elif self.strategy[index] == 1:
             revenue = grid_price * self.grid_stocks[index]
-            self.cash_balance += revenue
+            fee = revenue * self.fee
+            total_revenue = revenue - fee
+            self.cash_balance += total_revenue
             self.grid_stocks[index] = 0
             self.strategy[index] = 0  # 更新为可买入状态
+            self.detial.append([
+                delegate_time, transaction_time, "卖出",
+                grid_price, revenue, self.grid_stock_amount, fee, self.cash_balance, sum(self.grid_stocks)
+            ])
             self._log_transaction("sell", index, grid_price, revenue, current_price)
-        
+
         # 更新总资产
         total_stocks_value = sum(stock * current_price for stock in self.grid_stocks)
         self.total_assets.append(self.cash_balance + total_stocks_value)
@@ -97,7 +119,7 @@ class GridStrategy:
         记录交易日志（内部辅助方法）。
         """
         print(f"Action: {action.upper()}, Grid Index: {index}, Grid Price: {grid_price:.2f}, "
-            f"Amount: {amount:.2f}, Current Price: {current_price:.2f}, "
+            f"value: {amount:.2f}, Current Price: {current_price:.2f}, "
             f"Cash Balance: {self.cash_balance:.2f}")
     
     def run_strategy(self):
@@ -119,38 +141,38 @@ class GridStrategy:
             
             # 按顺序执行跨越网格的交易
             for index in crossed_grids:
-                self.execute_trade(index, current_price)
+                self.execute_trade(index, current_price, i)  # 传入 time_index
 
-    def plot_results(self):
-            """
-            绘制策略结果，包括价格趋势、总资产变化以及爆仓线
-            """
-            fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+        def plot_results(self):
+                """
+                绘制策略结果，包括价格趋势、总资产变化以及爆仓线
+                """
+                fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
-            # 价格走势
-            axs[0].plot(self.prices, label="Price", color="blue", marker="o")
-            
-            # 计算并绘制爆仓线
-            now_stock_nums = sum(self.grid_stocks)
-            break_price = self.break_line(self.prices[-1], now_stock_nums)
-            axs[0].axhline(break_price, color="red", linestyle="--", label=f"Break Line: {break_price:.2f}")
+                # 价格走势
+                axs[0].plot(self.prices, label="Price", color="blue", marker="o")
+                
+                # 计算并绘制爆仓线
+                now_stock_nums = sum(self.grid_stocks)
+                break_price = self.break_line(self.prices[-1], now_stock_nums)
+                axs[0].axhline(break_price, color="red", linestyle="--", label=f"Break Line: {break_price:.2f}")
 
-            axs[0].set_title("Price Trend and Break Line")
-            axs[0].set_xlabel("Time")
-            axs[0].set_ylabel("Price")
-            axs[0].legend()
-            axs[0].grid()
+                axs[0].set_title("Price Trend and Break Line")
+                axs[0].set_xlabel("Time")
+                axs[0].set_ylabel("Price")
+                axs[0].legend()
+                axs[0].grid()
 
-            # 总资产变化
-            axs[1].plot(self.total_assets, label="Total Assets", color="green", marker="o")
-            axs[1].set_title("Total Asset Trend")
-            axs[1].set_xlabel("Time")
-            axs[1].set_ylabel("Assets")
-            axs[1].legend()
-            axs[1].grid()
+                # 总资产变化
+                axs[1].plot(self.total_assets, label="Total Assets", color="green", marker="o")
+                axs[1].set_title("Total Asset Trend")
+                axs[1].set_xlabel("Time")
+                axs[1].set_ylabel("Assets")
+                axs[1].legend()
+                axs[1].grid()
 
-            plt.tight_layout()
-            plt.show()
+                plt.tight_layout()
+                plt.show()
 
 
 def generate_prices(length, min_value, max_value):

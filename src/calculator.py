@@ -33,3 +33,9 @@ class Calculator:
         爆仓线 = (1 - (1 / 杠杆)) * 平均持仓成本
         """
         return (1 - (1 / leverage)) * average_hold_price
+
+
+
+    # 套利次数是指在一次套利中，买入和卖出的次数
+    def Arbitrage_frequency():
+        pass
